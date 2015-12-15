@@ -57,7 +57,7 @@ void *Input(void *command) {
 			//call delete function
 			Delete(header, soc);
 		}
-		else if( strcmp(instruction, "DIR") == 0 ) {
+		else if( strcmp(instruction, "DIR\n") == 0 ) {
 			//call dir function
 			Dir(header, soc);
 		}
