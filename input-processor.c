@@ -37,17 +37,60 @@ void *Input(void *command) {
     	#endif
 
 		char* temp = NULL;
-		char* instructions = header[0];
+		char* instruction = header[0];
 		char* fileName = header[1];
 		
-		if (instructions == NULL) {
+		if (instruction == NULL) {
 			fprintf(stderr, "We done fucked up, command is invalid.");
+			pthread_exit(NULL);
+		}
+		
+		if( strcmp(instruction, "ADD") == 0 ) {
+			//call add function
+			Add(header, soc);
+		}
+		else if( strcmp(instruction, "READ") == 0 ) {
+			//call read function
+			Read(header, soc);
+		}
+		else if( strcmp(instruction, "DELETE") == 0 ) {
+			//call delete function
+			Delete(header, soc);
+		}
+		else if( strcmp(instruction, "DIR") == 0 ) {
+			//call dir function
+			Dir(header, soc);
 		}
 		else {
-			printf("Command inputted: %s - %s\n", instructions, fileName);
+			fprintf(stderr, "Command <%s> is invalid.", instruction);
+			pthread_exit(NULL);
 		}
 
 	}
+}
+
+void Add (char* command[], int soc) {
+	#if DEBUG
+      	fprintf(stderr, "[thread %lu] DEBUG: Starting ADD: %s.\n", pthread_self(), command[0]);
+    #endif
+}
+
+void Read (char* command[], int soc) {
+	#if DEBUG
+      	fprintf(stderr, "[thread %lu] DEBUG: Starting READ: %s.\n", pthread_self(), command[0]);
+    #endif
+}
+
+void Delete (char* command[], int soc) {
+	#if DEBUG
+      	fprintf(stderr, "[thread %lu] DEBUG: Starting DELETE: %s.\n", pthread_self(), command[0]);
+    #endif
+}
+
+void Dir (char* command[], int soc) {
+	#if DEBUG
+      	fprintf(stderr, "[thread %lu] DEBUG: Starting DIR: %s.\n", pthread_self(), command[0]);
+    #endif
 }
 
 void GetCmd(char* command[], int length, int soc) {
@@ -86,16 +129,6 @@ void GetCmd(char* command[], int length, int soc) {
 	// 	command[i] = bufChar;
 	// }
 	// command[i] = '\0';
-}
-
-void GetFileName(char* fileName[], char** ptr, int soc) {
-	strncpy(*fileName, strtok_r(NULL, " \r\n", ptr), 128);
-  (*fileName)[strlen(*fileName)] = '\0';
-  if (*fileName == NULL) {
-    printf("ERROR: COULD NOT READ FILENAME\n", soc);
-    pthread_exit(NULL);
-  }
-  return;
 }
 
 void Kill(int socket){

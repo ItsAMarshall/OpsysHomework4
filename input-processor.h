@@ -16,7 +16,13 @@ void CreateInputProcess(pthread_t* p, int socketID);
 
 void *Input(void *command);
 
-void GetFileName(char* fileName[], char** ptr, int soc);
+void Add (char* command[], int soc);
+
+void Read (char* command[], int soc);
+
+void Delete (char* command[], int soc);
+
+void Dir (char* command[], int soc);
 
 void GetCmd(char* command[], int length, int soc);
 
