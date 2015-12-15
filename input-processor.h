@@ -16,7 +16,9 @@ void CreateInputProcess(pthread_t* p, int socketID);
 
 void *Input(void *command);
 
-void GetCmd(char* command, int length, int soc);
+void GetFileName(char* fileName[], char** ptr, int soc);
+
+void GetCmd(char* command[], int length, int soc);
 
 void Kill(int soc);
 

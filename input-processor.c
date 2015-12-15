@@ -23,8 +23,7 @@ void *Input(void *command) {
 	int soc = *(int*) command;
 	printf("Getting to Input() \n");
 	while (1) {
-		char header[128];
-		char fileName[128];
+		char* header[128];
 
 		#if DEBUG
       		fprintf(stderr, "[thread %lu] DEBUG: WAITING TO PARSE COMMAND.\n",
@@ -34,37 +33,69 @@ void *Input(void *command) {
 		GetCmd(header, 128, soc);
 		
 		#if DEBUG
-      		fprintf(stderr, "[thread %lu] DEBUG: HEADER: %s.\n", pthread_self(), header);
+      		fprintf(stderr, "[thread %lu] DEBUG: HEADER: %s.\n", pthread_self(), header[0]);
     	#endif
 
 		char* temp = NULL;
-		char* instructions = strtok_r(header, " \r\n", &temp);
+		char* instructions = header[0];
+		char* fileName = header[1];
 		
-		if (command == NULL) {
+		if (instructions == NULL) {
 			fprintf(stderr, "We done fucked up, command is invalid.");
 		}
 		else {
-			printf("Command inputted: %s\n", instructions);
+			printf("Command inputted: %s - %s\n", instructions, fileName);
 		}
+
 	}
 }
 
-void GetCmd(char* command, int length, int soc) {
+void GetCmd(char* command[], int length, int soc) {
 	//printf("Getting Command with length of %d\n", length);
-	char bufChar = '\0';
-	int i = 0;
-	for (i = 0; i < length; ++i) {
-		int j = read(soc, &bufChar, 1);
-		if (j == 0) {
-			Kill(soc);
-			pthread_exit(NULL);
-		}
-		if (bufChar == '\n' || bufChar == '\r') {
-			break;
-		}
-		command[i] = bufChar;
+	char *param, *str;
+	char recString[128];
+	char *savePtr;
+	int j = read(soc, &recString, 128);
+	printf("Got a return from read of -%d-\n", j);
+	if (j == 0) {
+		Kill(soc);
+		pthread_exit(NULL);
 	}
-	command[i] = '\0';
+	int i = 0;
+	for( str = recString; ; str = NULL, i++) {
+		param = strtok_r(str, " ", &savePtr);
+		if( param == NULL ){
+			command[i] = '\0';
+			return;
+		}
+		command[i] = param;
+		printf( "New Paramater --> %s\n", param);
+	}
+
+	// char bufChar = '\0';
+	// int i = 0;
+	// for (i = 0; i < length; ++i) {
+	// 	int j = read(soc, &bufChar, 1);
+	// 	if (j == 0) {
+	// 		Kill(soc);
+	// 		pthread_exit(NULL);
+	// 	}
+	// 	if (bufChar == '\n' || bufChar == '\r') {
+	// 		break;
+	// 	}
+	// 	command[i] = bufChar;
+	// }
+	// command[i] = '\0';
+}
+
+void GetFileName(char* fileName[], char** ptr, int soc) {
+	strncpy(*fileName, strtok_r(NULL, " \r\n", ptr), 128);
+  (*fileName)[strlen(*fileName)] = '\0';
+  if (*fileName == NULL) {
+    printf("ERROR: COULD NOT READ FILENAME\n", soc);
+    pthread_exit(NULL);
+  }
+  return;
 }
 
 void Kill(int socket){
