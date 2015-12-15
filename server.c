@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
+#include "input-processor.h"
+
 void error(char *msg)
 {
     perror(msg);
@@ -56,6 +58,9 @@ int main(int argc, char *argv[])
 	     printf("Here is the message: %s\n",buffer);
 	     n = write(newsockfd,"I got your message",18);
 	     if (n < 0) error("ERROR writing to socket");
+		 
+		 static pthread_t thread;
+		 CreateInputProcess(&thread, newsockfd);
 	 }
      return 0; 
 }
