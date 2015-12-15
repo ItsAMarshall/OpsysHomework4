@@ -12,7 +12,7 @@ void error(char *msg)
 
 int main(int argc, char *argv[])
 {
-    int sockfd, portno, n;
+        int sockfd, portno, n;
 
     struct sockaddr_in serv_addr;
     struct hostent *server;
