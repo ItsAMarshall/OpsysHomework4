@@ -26,19 +26,17 @@ void *Input(void *command) {
 		char* header[128];
 
 		#if DEBUG
-      		fprintf(stderr, "[thread %lu] DEBUG: WAITING TO PARSE COMMAND.\n",
-        	pthread_self());
+      		fprintf(stderr, "[thread %d] DEBUG: WAITING TO PARSE COMMAND.\n",
+        	(int)pthread_self());
     	#endif
 		
 		GetCmd(header, 128, soc);
 		
 		#if DEBUG
-      		fprintf(stderr, "[thread %lu] DEBUG: HEADER: %s.\n", pthread_self(), header[0]);
+      		fprintf(stderr, "[thread %d] DEBUG: HEADER: %s.\n", (int)pthread_self(), header[0]);
     	#endif
 
-		char* temp = NULL;
 		char* instruction = header[0];
-		char* fileName = header[1];
 		
 		if (instruction == NULL) {
 			fprintf(stderr, "We done fucked up, command is invalid.");
@@ -62,7 +60,7 @@ void *Input(void *command) {
 			Dir(header, soc);
 		}
 		else {
-			fprintf(stderr, "Command <%s> is invalid.", instruction);
+			fprintf(stderr, "Command <%s> is invalid.\n", instruction);
 			pthread_exit(NULL);
 		}
 
@@ -71,25 +69,25 @@ void *Input(void *command) {
 
 void Add (char* command[], int soc) {
 	#if DEBUG
-      	fprintf(stderr, "[thread %lu] DEBUG: Starting ADD: %s.\n", pthread_self(), command[0]);
+      	fprintf(stderr, "[thread %d] DEBUG: Starting ADD: %s.\n", (int)pthread_self(), command[0]);
     #endif
 }
 
 void Read (char* command[], int soc) {
 	#if DEBUG
-      	fprintf(stderr, "[thread %lu] DEBUG: Starting READ: %s.\n", pthread_self(), command[0]);
+      	fprintf(stderr, "[thread %d] DEBUG: Starting READ: %s.\n", (int)pthread_self(), command[0]);
     #endif
 }
 
 void Delete (char* command[], int soc) {
 	#if DEBUG
-      	fprintf(stderr, "[thread %lu] DEBUG: Starting DELETE: %s.\n", pthread_self(), command[0]);
+      	fprintf(stderr, "[thread %d] DEBUG: Starting DELETE: %s.\n", (int)pthread_self(), command[0]);
     #endif
 }
 
 void Dir (char* command[], int soc) {
 	#if DEBUG
-      	fprintf(stderr, "[thread %lu] DEBUG: Starting DIR: %s.\n", pthread_self(), command[0]);
+      	fprintf(stderr, "[thread %d] DEBUG: Starting DIR: %s.\n", (int)pthread_self(), command[0]);
     #endif
 }
 
@@ -100,7 +98,7 @@ void GetCmd(char* command[], int length, int soc) {
 	char *savePtr;
 	int j = read(soc, &recString, 128);
 	printf("Got a return from read of -%d-\n", j);
-	if (j == 0) {
+	if (j <= 0) {
 		Kill(soc);
 		pthread_exit(NULL);
 	}
@@ -108,7 +106,7 @@ void GetCmd(char* command[], int length, int soc) {
 	for( str = recString; ; str = NULL, i++) {
 		param = strtok_r(str, " ", &savePtr);
 		if( param == NULL ){
-			command[i] = '\0';
+			command[i] = NULL;
 			return;
 		}
 		command[i] = param;
@@ -140,7 +138,7 @@ void Kill(int socket){
 }
 
 int SocketIsOpen(int socket) {
-	int i = send(socket, '\0', 1, 0);
+	int i = send(socket, NULL, 1, 0);
 	if (i < 0) {
 		return 0;
 	}

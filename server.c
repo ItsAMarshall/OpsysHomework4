@@ -24,10 +24,9 @@ void error(char *msg)
 int main(int argc, char *argv[])
 {
 
-     int sockfd, newsockfd, portno, clilen;
-     char buffer[256];
+     int sockfd, newsockfd, portno;
+     socklen_t clilen;
      struct sockaddr_in serv_addr, cli_addr;
-     int n;
      if (argc < 2) {
          fprintf(stderr,"ERROR, no port provided\n");
          exit(1);
@@ -46,7 +45,7 @@ int main(int argc, char *argv[])
     
  	 printf("Listening on port %d\n", portno);
      listen(sockfd,5);
-     clilen = sizeof(cli_addr);
+     //clilen = sizeof(cli_addr);
      while(1) {
           newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
           
