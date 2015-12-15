@@ -1,9 +1,17 @@
 /* A simple server in the internet domain using TCP
    The port number is passed as an argument */
 #include <stdio.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/stat.h>
+#include <pthread.h>
 
 void error(char *msg)
 {
@@ -34,12 +42,14 @@ int main(int argc, char *argv[])
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
      while (1) {
+     	 printf("Listening on port %d\n", portno);
 	     listen(sockfd,5);
 	     clilen = sizeof(cli_addr);
 	     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 	     if (newsockfd < 0) 
 	          error("ERROR on accept");
-	     printf("Accepted a socket %s\n", inet_ntoa(cli_addr.sin_addr));
+	     printf("Received incoming connection from <%s>\n",
+      		inet_ntoa(cli_addr.sin_addr));
 	     bzero(buffer,256);
 	     n = read(newsockfd,buffer,255);
 	     if (n < 0) error("ERROR reading from socket");
