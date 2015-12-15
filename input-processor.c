@@ -13,21 +13,30 @@
 
 #include "input-processor.h"
 
-void CreateInputProcess(pthread_t* p, int sID) {
+void CreateInputProcess(pthread_t* p, int socketID) {
 	
-	pthread_create(p, NULL, &input, &sID);
+	pthread_create(p, NULL, &Input, &socketID);
 }
 
-void *input(void *command) {
+void *Input(void *command) {
 	
-	int socket = *(int*) command;
-	
+	int soc = *(int*) command;
+	printf("Getting to Input() \n");
 	while (1) {
 		char header[128];
 		char fileName[128];
+
+		#if DEBUG
+      		fprintf(stderr, "[thread %lu] DEBUG: WAITING TO PARSE COMMAND.\n",
+        	pthread_self());
+    	#endif
 		
-		GetCmd(header, 128, socket);
+		GetCmd(header, 128, soc);
 		
+		#if DEBUG
+      		fprintf(stderr, "[thread %lu] DEBUG: HEADER: %s.\n", pthread_self(), header);
+    	#endif
+
 		char* temp = NULL;
 		char* instructions = strtok_r(header, " \r\n", &temp);
 		
@@ -35,37 +44,39 @@ void *input(void *command) {
 			fprintf(stderr, "We done fucked up, command is invalid.");
 		}
 		else {
-			printf("Command inputted: %s", instructions);
+			printf("Command inputted: %s\n", instructions);
 		}
 	}
 }
 
-void GetCmd(char* command, int length, int socket) {
+void GetCmd(char* command, int length, int soc) {
+	//printf("Getting Command with length of %d\n", length);
 	char bufChar = '\0';
 	int i = 0;
 	for (i = 0; i < length; ++i) {
-		int j = read(socket, &buffer, 1);
-		if (j <= 0) {
-			Kill(socket);
-			return;
+		int j = read(soc, &bufChar, 1);
+		if (j == 0) {
+			Kill(soc);
+			pthread_exit(NULL);
 		}
-		if (buffer == '\n' || buffer == '\r') {
+		if (bufChar == '\n' || bufChar == '\r') {
 			break;
 		}
-		header[i] = buffer;
+		command[i] = bufChar;
 	}
-	header[i] = '\0';
+	command[i] = '\0';
 }
 
 void Kill(int socket){
 	if (SocketIsOpen(socket) == 1) {
+		printf("Killing Socket\n");
 		close(socket);
 		pthread_exit(NULL);
 	}
 }
 
 int SocketIsOpen(int socket) {
-	int i = send(socket, '\0', 1, MSG_NOSIGNAL);
+	int i = send(socket, '\0', 1, 0);
 	if (i < 0) {
 		return 0;
 	}

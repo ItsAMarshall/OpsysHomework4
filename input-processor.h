@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -11,12 +12,12 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
-void CreateInputProcess(pthread_t* p, int sID);
+void CreateInputProcess(pthread_t* p, int socketID);
 
-void *input(void *command);
+void *Input(void *command);
 
-void GetCmd(char* command, int length, int socket);
+void GetCmd(char* command, int length, int soc);
 
-void Kill(int socket);
+void Kill(int soc);
 
-void SocketIsOpen(int socket);
+int SocketIsOpen(int soc);

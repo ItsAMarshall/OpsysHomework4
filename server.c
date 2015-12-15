@@ -43,24 +43,26 @@ int main(int argc, char *argv[])
      if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
-     while (1) {
-     	 printf("Listening on port %d\n", portno);
-	     listen(sockfd,5);
-	     clilen = sizeof(cli_addr);
-	     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-	     if (newsockfd < 0) 
-	          error("ERROR on accept");
-	     printf("Received incoming connection from <%s>\n",
-      		inet_ntoa(cli_addr.sin_addr));
-	     bzero(buffer,256);
-	     n = read(newsockfd,buffer,255);
-	     if (n < 0) error("ERROR reading from socket");
-	     printf("Here is the message: %s\n",buffer);
-	     n = write(newsockfd,"I got your message",18);
-	     if (n < 0) error("ERROR writing to socket");
-		 
-		 static pthread_t thread;
-		 CreateInputProcess(&thread, newsockfd);
-	 }
+    
+ 	 printf("Listening on port %d\n", portno);
+     listen(sockfd,5);
+     clilen = sizeof(cli_addr);
+     while(1) {
+          newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+          
+          if (newsockfd < 0) 
+               error("ERROR on accept");
+          printf("Received incoming connection from <%s>\n",
+               inet_ntoa(cli_addr.sin_addr));
+          // bzero(buffer,256);
+          // n = read(newsockfd,buffer,255);
+          // if (n < 0) error("ERROR reading from socket");
+          // printf("Here is the message: %s\n",buffer);
+          // n = write(newsockfd,"I got your message",18);
+          // if (n < 0) error("ERROR writing to socket");
+          
+          static pthread_t thread;
+          CreateInputProcess(&thread, newsockfd);
+     }
      return 0; 
 }
