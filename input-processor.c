@@ -22,7 +22,7 @@ void CreateInputProcess(pthread_t* p, int socketID) {
 void *Input(void *command) {
 	
 	int soc = *(int*) command;
-	printf("Getting to Input() \n");
+	//printf("Getting to Input() \n");
 	while (1) {
 		char* header[128];
 		char fileName[128];
@@ -40,13 +40,11 @@ void *Input(void *command) {
 		char* instruction = header[0];
 		
 		if (instruction == NULL) {
-			fprintf(stderr, "We done fucked up, command is invalid.");
-			pthread_exit(NULL);
+			SendMessage("command is invalid.", soc);
 		}
-		
-		if( strcmp(instruction, "ADD") == 0 ) {
+		else if( strcmp(instruction, "STORE") == 0 ) {
 			//call add function
-			printf("%s | %s | %d", header[0], header[1], atoi(header[2]));
+			//printf("%s | %s | %d", header[0], header[1], atoi(header[2]));
 			strcpy(fileName, header[1]);
 			Add(fileName, atoi(header[2])+1, soc);
 		}
@@ -62,7 +60,7 @@ void *Input(void *command) {
 		else if( strcmp(instruction, "DIR\n") == 0 ) {
 			//call dir function
 			Dir(soc);
-			printf("WE MADE IT OUT ALIVE!\n");
+			//printf("WE MADE IT OUT ALIVE!\n");
 		}
 		else {
 			fprintf(stderr, "Command <%s> is invalid.\n", instruction);
@@ -88,6 +86,7 @@ void Add (char* fileName, int fileSize, int soc) {
 
     free(fileText);
     fclose(file);
+    SendAckMessage(soc);
 }
 
 void Read (char* command[], int soc) {
@@ -106,10 +105,11 @@ void Delete (char* fileName, int soc) {
 	status = remove(fileName);
 	
 	if (status == 0) {
-		printf("[thread %d] File '%s' successfully deleted", (int)pthread_self(), fileName);
+		printf("[thread %d] File '%s' successfully deleted\n", (int)pthread_self(), fileName);
+		SendAckMessage(soc);
 	}
 	else {
-		fprintf(stderr, "[thread %d] ERROR: File couldn't be deleted", (int)pthread_self());
+		fprintf(stderr, "[thread %d] ERROR: File couldn't be deleted\n", (int)pthread_self());
 	}
 	
 	
@@ -139,7 +139,7 @@ void Dir (int soc) {
 
 	printf("%d\n", numFiles);
 	char *files[numFiles];
-	char *temp;
+	char *temp = NULL;
 	numFiles = 0;
 	storageDir = opendir("../.storage/");
 	while ( (checkFile = readdir(storageDir)) != NULL) {
@@ -165,12 +165,16 @@ void Dir (int soc) {
 		}
 	}
 
-	for (i = 0; i < numFiles; ++i) {
-		printf("-->%s\n", files[i]);
-	}
+	char msg[2];
+	sprintf(msg, "%d", numFiles);
+	SendMessage(msg, soc);
+
+	// for (i = 0; i < numFiles; ++i) {
+	// 	printf("-->%s\n", files[i]);
+	// }
 	closedir(storageDir);
 	chdir(".storage");
-	printf("LOOK AT ME, I'M MR MESEEKS\n");
+	//printf("LOOK AT ME, I'M MR MESEEKS\n");
 	return;
 	
 }
@@ -185,6 +189,7 @@ void GetCmd(char* command[], int length, int soc) {
 		printf("[thread %d] Client closed its socket....terminating\n", (int)pthread_self());
 		pthread_exit(NULL);
 	}
+	printf("[thread %d] Rcvd: %s", (int)pthread_self(), recString);
 	int i = 0;
 	for( str = recString; ; str = NULL, i++) {
 		param = strtok_r(str, " ", &savePtr);
@@ -193,7 +198,7 @@ void GetCmd(char* command[], int length, int soc) {
 			return;
 		}
 		command[i] = param;
-		printf( "New Paramater --> %s\n", param);
+		//printf( "New Paramater --> %s\n", param);
 	}
 
 	// char bufChar = '\0';
@@ -218,6 +223,16 @@ void Kill(int socket){
 		close(socket);
 		pthread_exit(NULL);
 	}
+}
+
+void SendMessage(char* message, int soc) {
+  // fprintf(stderr, "[thread %d] %s", (int)pthread_self(), message);
+  send(soc, message, strlen(message), 0);
+}
+
+void SendAckMessage(int soc) {
+  send(soc, "ACK\n", strlen("ACK\n"), 0);
+  printf("[thread %d] Sent: ACK\n", (int)pthread_self());
 }
 
 int SocketIsOpen(int socket) {

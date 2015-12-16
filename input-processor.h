@@ -33,4 +33,8 @@ void Kill(int soc);
 
 int SocketIsOpen(int soc);
 
+void SendMessage(char* message, int soc);
+
+void SendAckMessage(int soc);
+
 #endif
