@@ -56,11 +56,13 @@ void *Input(void *command) {
 		}
 		else if( strcmp(instruction, "DELETE") == 0 ) {
 			//call delete function
-			Delete(header, soc);
+			strcpy(fileName, header[1]);
+			Delete(fileName, soc);
 		}
 		else if( strcmp(instruction, "DIR\n") == 0 ) {
 			//call dir function
 			Dir(soc);
+			printf("WE MADE IT OUT ALIVE!\n");
 		}
 		else {
 			fprintf(stderr, "Command <%s> is invalid.\n", instruction);
@@ -79,10 +81,11 @@ void Add (char* fileName, int fileSize, int soc) {
     // }
 
     char* fileText = malloc(sizeof(char) * fileSize);
-    read(soc, fileText, fileSize);
-
     FILE* file = fopen(fileName, "wb");
-    fwrite(fileText, sizeof(char), fileSize, file);
+
+    read(soc, fileText, fileSize);
+	fwrite(fileText, sizeof(char), fileSize, file);
+
     free(fileText);
     fclose(file);
 }
@@ -93,10 +96,23 @@ void Read (char* command[], int soc) {
     #endif
 }
 
-void Delete (char* command[], int soc) {
+void Delete (char* fileName, int soc) {
 	#if DEBUG
-      	printf("[thread %d] DEBUG: Starting DELETE: %s\n", (int)pthread_self(), command[0]);
+      	printf("[thread %d] DEBUG: Starting DELETE: %s\n", (int)pthread_self(), fileName);
     #endif
+	
+	int status;
+	
+	status = remove(fileName);
+	
+	if (status == 0) {
+		printf("[thread %d] File '%s' successfully deleted", (int)pthread_self(), fileName);
+	}
+	else {
+		fprintf(stderr, "[thread %d] ERROR: File couldn't be deleted", (int)pthread_self());
+	}
+	
+	
 }
 
 void Dir (int soc) {
@@ -115,16 +131,48 @@ void Dir (int soc) {
 			}
 		}
 		closedir(storageDir);
-		printf("%d\n", numFiles);
-		const char *files[numFiles];
-		int i;
-		// for (i = 0; i < numFiles; ++i) {
-		// 	printf("%s", files[i]);
-		// }
 	}
 	else {
     	fprintf(stderr, "[thread %d] ERROR: Invalid Directory '.storage/' ", (int)pthread_self());
+    	return;
     }
+
+	printf("%d\n", numFiles);
+	char *files[numFiles];
+	char *temp;
+	numFiles = 0;
+	storageDir = opendir("../.storage/");
+	while ( (checkFile = readdir(storageDir)) != NULL) {
+		if (checkFile->d_type == DT_REG) {
+			strcpy(files[numFiles], checkFile->d_name);
+			numFiles++;
+		}
+	}
+	
+	/*
+	int i;
+	for (i = 0; i < numFiles; ++i) {
+		printf("%s", files[i]);
+	}*/
+	int i, j;
+	for (i = 1; i < numFiles; ++i) {
+		for (j = 1; j < numFiles; ++j) {
+			if (strcmp(files[j - 1], files[j]) > 0) {
+				strcpy(temp, files[j - 1]);
+				strcpy(files[j - 1], files[j]);
+				strcpy(files[j], temp);
+			}
+		}
+	}
+
+	for (i = 0; i < numFiles; ++i) {
+		printf("-->%s\n", files[i]);
+	}
+	closedir(storageDir);
+	chdir(".storage");
+	printf("LOOK AT ME, I'M MR MESEEKS\n");
+	return;
+	
 }
 
 void GetCmd(char* command[], int length, int soc) {
@@ -133,9 +181,8 @@ void GetCmd(char* command[], int length, int soc) {
 	char recString[128];
 	char *savePtr;
 	int j = read(soc, &recString, 128);
-	printf("Got a return from read of -%d-\n", j);
 	if (j <= 0) {
-		Kill(soc);
+		printf("[thread %d] Client closed its socket....terminating\n", (int)pthread_self());
 		pthread_exit(NULL);
 	}
 	int i = 0;

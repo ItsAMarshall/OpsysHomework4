@@ -23,7 +23,7 @@ void Add (char* fileName, int fileSize, int soc);
 
 void Read (char* command[], int soc);
 
-void Delete (char* command[], int soc);
+void Delete (char* fileName, int soc);
 
 void Dir (int soc);
 

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <arpa/inet.h>
@@ -22,16 +23,22 @@ void error(char *msg)
 }
 
 void GenerateStorage() {
+    DIR* directory;
+    directory = opendir(".storage/");
+    if( directory != NULL) {
+        system("exec rm -r .storage/");
+    }
     struct stat exists;
     int success;
     if (stat(".storage", &exists) < 0) {
-    success = mkdir(".storage", 0700);
-    if (success != 0) {
-      fprintf(stderr, "ERROR: unable to make storage directory\n");
-      return;
+        success = mkdir(".storage", 0700);
+        if (success != 0) {
+          fprintf(stderr, "ERROR: unable to make storage directory\n");
+          return;
+        }
     }
-  }
   chdir(".storage");
+
   return;
 }
 
