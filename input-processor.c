@@ -55,8 +55,9 @@ void *Input(void *command) {
 			Read(header, soc);
 		}
 		else if( strcmp(instruction, "DELETE") == 0 ) {
+			strcpy(fileName, header[1]);
 			//call delete function
-			Delete(header, soc);
+			Delete(fileName);
 		}
 		else if( strcmp(instruction, "DIR\n") == 0 ) {
 			//call dir function
@@ -93,10 +94,26 @@ void Read (char* command[], int soc) {
     #endif
 }
 
-void Delete (char* command[], int soc) {
+void Delete (char* fileName) {
 	#if DEBUG
       	printf("[thread %d] DEBUG: Starting DELETE: %s\n", (int)pthread_self(), command[0]);
     #endif
+	
+	int status;
+	char* fileLocation[128];
+	strcpy(fileLocation, "../.storage/");
+	strcpy(fileLoctaion, fileName);
+	
+	status = remove(fileLocation);
+	
+	if (status == 0) {
+		printf("[thread %d] File '%s' successfully deleted", (int)pthread_self(), fileName);
+	}
+	else {
+		fprintf(stderr, "[thread %d] ERROR: File couldn't be deleted", (int)pthread_self());
+	}
+	
+	
 }
 
 void Dir (int soc) {
@@ -116,11 +133,33 @@ void Dir (int soc) {
 		}
 		closedir(storageDir);
 		printf("%d\n", numFiles);
-		const char *files[numFiles];
+		const char *files[numFiles][128];
+		const char *temp[128];
+		numFiles = 0;
+		while ( (checkFile = readdir(storageDir)) != NULL) {
+			if (checkFile->d_type == DT_REG) {
+				files[numFiles] = checkFile->d_name;
+				numFiles++;
+			}
+		}
+		/*
 		int i;
-		// for (i = 0; i < numFiles; ++i) {
-		// 	printf("%s", files[i]);
-		// }
+		for (i = 0; i < numFiles; ++i) {
+			printf("%s", files[i]);
+		}*/
+		int i, j;
+		for (i = 1; i < numFiles; ++i) {
+			for (j = 1; j < numFiles; ++j) {
+				if (strcmp(files[j - 1], files[j]) > 0) {
+					strcpy(temp, files[j - 1]);
+					strcpy(files[j - 1], files[j]);
+					strcpy(files[j], temp);
+				}
+			}
+		}
+		for (i = 0; i < numFiles; ++i) {
+			printf("%s", files[i]);
+		}
 	}
 	else {
     	fprintf(stderr, "[thread %d] ERROR: Invalid Directory '.storage/' ", (int)pthread_self());
