@@ -21,9 +21,23 @@ void error(char *msg)
     exit(1);
 }
 
+void GenerateStorage() {
+    struct stat exists;
+    int success;
+    if (stat(".storage", &exists) < 0) {
+    success = mkdir(".storage", 0700);
+    if (success != 0) {
+      fprintf(stderr, "ERROR: unable to make storage directory\n");
+      return;
+    }
+  }
+  chdir(".storage");
+  return;
+}
+
 int main(int argc, char *argv[])
 {
-
+    GenerateStorage();
      int sockfd, newsockfd, portno;
      socklen_t clilen;
      struct sockaddr_in serv_addr, cli_addr;
